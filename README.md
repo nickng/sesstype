@@ -17,7 +17,7 @@ By default the `parse-sesstype` command will also be installed.
 The basic syntax of `sesstype` language is given below, for details see
 [godoc](https://godoc.org/go.nickng.io/sesstype)
 
-#### Global Types
+### Global Types
 
     G   ::= P->Q: { l(U).G , ... } Interaction between P and Q with message l(U)
           | *T.G                   Recursion with label T, body G
