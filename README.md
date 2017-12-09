@@ -14,46 +14,24 @@ By default the `parse-sesstype` command will also be installed.
 
 ## Syntax
 
-The basic syntax of `sesstype` implemented in this parser is given below
-
-```
-ident   = [A-Za-z0-9]+
-role    = ident
-message = ident payload
-payload = "()"
-        | "(" ident ")"
-```
+The basic syntax of `sesstype` language is given below, for details see
+[godoc](https://godoc.org/go.nickng.io/sesstype)
 
 #### Global Types
 
-```
-global   = role "->" role ":" interact
-         | recur
-         | typevar
-         | end
-interact = sendrecv | "{" sendrecv ("," sendrecv)+ "}"
-sendrecv = message "." global
-recur    = "*" ident "." global
-typevar  = ident
-end      = "end"
-```
+    G   ::= P->Q: { l(U).G , ... } Interaction between P and Q with message l(U)
+          | *T.G                   Recursion with label T, body G
+          | T                      Type variable
+          | end                    End type
 
-#### Local Types
+### Local Types
 
-```
-local    = role "&" branch
-         | role "+" select
-         | lrecur
-         | ltypevar
-         | end
-branch   = recv | "{" recv ("," recv)+ "}"
-recv     = "?" message "." local
-select   = send | "{" send ("," send)+ "}"
-send     = "!" message "." local
-lrecur   = "*" ident "." local
-ltypevar = ident
-lend     = "end"
-```
+    L   ::= Q &{ ?l(U).L, ... }    Branching, receive l(U) from role Q
+          | P +{ !l(U).L, ... }    Selection, send l(U) to role P
+          | *T.L                   Recursion with label T, body L
+          | T                      Type variable
+          | end                    End type
+
 ## License
 
 `sesstype` is licensed under the [Apache License](http://www.apache.org/licenses/LICENSE-2.0).

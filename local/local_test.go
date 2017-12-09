@@ -3,8 +3,6 @@ package local
 import (
 	"strings"
 	"testing"
-
-	"go.nickng.io/sesstype"
 )
 
 func TestParseEnd(t *testing.T) {
@@ -54,10 +52,10 @@ func TestParseTypeVar(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if l, ok := l.(sesstype.LTypeVar); !ok {
+	if l, ok := l.(TypeVar); !ok {
 		t.Errorf("Parse error: expected to get LTypeVar but got %T", l)
 	}
-	if want, got := "T", l.(sesstype.LTypeVar).T; want != got {
+	if want, got := "T", l.(TypeVar).T; want != got {
 		t.Errorf("Parse error: want %s but got %s", want, got)
 	}
 }

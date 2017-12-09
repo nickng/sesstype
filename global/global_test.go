@@ -1,4 +1,4 @@
-package sesstype
+package global
 
 import (
 	"strings"

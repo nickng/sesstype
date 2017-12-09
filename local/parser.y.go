@@ -10,7 +10,7 @@ import (
 	"go.nickng.io/sesstype"
 )
 
-var local sesstype.Local // Temporary holder for parsed Local
+var local Type // Temporary holder for parsed Local
 
 //line local.y:13
 type sesstypeSymType struct {
@@ -18,12 +18,12 @@ type sesstypeSymType struct {
 	strval    string
 	msg       sesstype.Message
 	role      sesstype.Role
-	local     sesstype.Local
+	local     Type
 	sendrecvs []struct {
 		m sesstype.Message
-		l sesstype.Local
+		l Type
 	}
-	branch map[sesstype.Message]sesstype.Local
+	branch map[sesstype.Message]Type
 }
 
 const LPAREN = 57346
@@ -73,7 +73,7 @@ const sesstypeInitialStackSize = 16
 //line local.y:81
 
 // Parse is the entry point to the local type parser.
-func Parse(r io.Reader) (sesstype.Local, error) {
+func Parse(r io.Reader) (Type, error) {
 	l := NewLexer(r)
 	sesstypeParse(l)
 	select {
@@ -533,13 +533,13 @@ sesstypedefault:
 		sesstypeDollar = sesstypeS[sesstypept-2 : sesstypept+1]
 		//line local.y:43
 		{
-			sesstypeVAL.local = sesstype.NewBranch(sesstypeDollar[1].role, sesstypeDollar[2].branch)
+			sesstypeVAL.local = NewBranch(sesstypeDollar[1].role, sesstypeDollar[2].branch)
 		}
 	case 7:
 		sesstypeDollar = sesstypeS[sesstypept-2 : sesstypept+1]
 		//line local.y:44
 		{
-			sesstypeVAL.local = sesstype.NewSelect(sesstypeDollar[1].role, sesstypeDollar[2].branch)
+			sesstypeVAL.local = NewSelect(sesstypeDollar[1].role, sesstypeDollar[2].branch)
 		}
 	case 8:
 		sesstypeDollar = sesstypeS[sesstypept-1 : sesstypept+1]
@@ -563,7 +563,7 @@ sesstypedefault:
 		sesstypeDollar = sesstypeS[sesstypept-4 : sesstypept+1]
 		//line local.y:50
 		{
-			sesstypeVAL.branch = make(map[sesstype.Message]sesstype.Local)
+			sesstypeVAL.branch = make(map[sesstype.Message]Type)
 			for _, l := range sesstypeDollar[3].sendrecvs {
 				sesstypeVAL.branch[l.m] = l.l
 			}
@@ -572,7 +572,7 @@ sesstypedefault:
 		sesstypeDollar = sesstypeS[sesstypept-1 : sesstypept+1]
 		//line local.y:51
 		{
-			sesstypeVAL.branch = make(map[sesstype.Message]sesstype.Local)
+			sesstypeVAL.branch = make(map[sesstype.Message]Type)
 			for _, l := range sesstypeDollar[1].sendrecvs {
 				sesstypeVAL.branch[l.m] = l.l
 			}
@@ -583,10 +583,10 @@ sesstypedefault:
 		{
 			sesstypeVAL.sendrecvs = []struct {
 				m sesstype.Message
-				l sesstype.Local
+				l Type
 			}{struct {
 				m sesstype.Message
-				l sesstype.Local
+				l Type
 			}{sesstypeDollar[2].msg, sesstypeDollar[4].local}}
 		}
 	case 14:
@@ -601,17 +601,17 @@ sesstypedefault:
 		{
 			sesstypeVAL.sendrecvs = []struct {
 				m sesstype.Message
-				l sesstype.Local
+				l Type
 			}{struct {
 				m sesstype.Message
-				l sesstype.Local
+				l Type
 			}{m: sesstypeDollar[1].sendrecvs[0].m, l: sesstypeDollar[1].sendrecvs[0].l}}
 		}
 	case 16:
 		sesstypeDollar = sesstypeS[sesstypept-4 : sesstypept+1]
 		//line local.y:61
 		{
-			sesstypeVAL.branch = make(map[sesstype.Message]sesstype.Local)
+			sesstypeVAL.branch = make(map[sesstype.Message]Type)
 			for _, s := range sesstypeDollar[3].sendrecvs {
 				sesstypeVAL.branch[s.m] = s.l
 			}
@@ -620,7 +620,7 @@ sesstypedefault:
 		sesstypeDollar = sesstypeS[sesstypept-1 : sesstypept+1]
 		//line local.y:62
 		{
-			sesstypeVAL.branch = make(map[sesstype.Message]sesstype.Local)
+			sesstypeVAL.branch = make(map[sesstype.Message]Type)
 			for _, s := range sesstypeDollar[1].sendrecvs {
 				sesstypeVAL.branch[s.m] = s.l
 			}
@@ -631,10 +631,10 @@ sesstypedefault:
 		{
 			sesstypeVAL.sendrecvs = []struct {
 				m sesstype.Message
-				l sesstype.Local
+				l Type
 			}{struct {
 				m sesstype.Message
-				l sesstype.Local
+				l Type
 			}{sesstypeDollar[2].msg, sesstypeDollar[4].local}}
 		}
 	case 19:
@@ -649,29 +649,29 @@ sesstypedefault:
 		{
 			sesstypeVAL.sendrecvs = []struct {
 				m sesstype.Message
-				l sesstype.Local
+				l Type
 			}{struct {
 				m sesstype.Message
-				l sesstype.Local
+				l Type
 			}{m: sesstypeDollar[1].sendrecvs[0].m, l: sesstypeDollar[1].sendrecvs[0].l}}
 		}
 	case 21:
 		sesstypeDollar = sesstypeS[sesstypept-4 : sesstypept+1]
 		//line local.y:72
 		{
-			sesstypeVAL.local = sesstype.NewLRecur(sesstypeDollar[2].strval, sesstypeDollar[4].local)
+			sesstypeVAL.local = NewRecur(sesstypeDollar[2].strval, sesstypeDollar[4].local)
 		}
 	case 22:
 		sesstypeDollar = sesstypeS[sesstypept-1 : sesstypept+1]
 		//line local.y:75
 		{
-			sesstypeVAL.local = sesstype.NewLTypeVar(sesstypeDollar[1].strval)
+			sesstypeVAL.local = NewTypeVar(sesstypeDollar[1].strval)
 		}
 	case 23:
 		sesstypeDollar = sesstypeS[sesstypept-1 : sesstypept+1]
 		//line local.y:78
 		{
-			sesstypeVAL.local = sesstype.NewLEnd()
+			sesstypeVAL.local = NewEnd()
 		}
 	}
 	goto sesstypestack /* stack new state and value */

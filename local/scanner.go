@@ -61,7 +61,7 @@ func (s *Scanner) unread() {
 }
 
 // Scan returns the next token and parsed value.
-func (s *Scanner) Scan() (token sesstype.Token, value string, startPos, endPos sesstype.TokenPos) {
+func (s *Scanner) Scan() (token Token, value string, startPos, endPos sesstype.TokenPos) {
 	ch := s.read()
 
 	if isWhitespace(ch) {
@@ -118,10 +118,10 @@ func (s *Scanner) Scan() (token sesstype.Token, value string, startPos, endPos s
 		return ARROW, "→", startPos, endPos
 	}
 
-	return sesstype.ILLEGAL, string(ch), startPos, endPos
+	return ILLEGAL, string(ch), startPos, endPos
 }
 
-func (s *Scanner) scanIdent() (token sesstype.Token, value string, startPos, endPos sesstype.TokenPos) {
+func (s *Scanner) scanIdent() (token Token, value string, startPos, endPos sesstype.TokenPos) {
 	var buf bytes.Buffer
 	startPos = s.pos
 	defer func() { endPos = s.pos }()

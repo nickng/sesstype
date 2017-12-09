@@ -12,23 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package sesstype
+package global
 
 import (
 	"bufio"
 	"bytes"
 	"io"
+
+	"go.nickng.io/sesstype"
 )
 
 // Scanner is a lexical scanner.
 type Scanner struct {
 	r   *bufio.Reader
-	pos TokenPos
+	pos sesstype.TokenPos
 }
 
 // NewScanner returns a new instance of Scanner.
 func NewScanner(r io.Reader) *Scanner {
-	return &Scanner{r: bufio.NewReader(r), pos: TokenPos{Char: 0, Lines: []int{}}}
+	return &Scanner{r: bufio.NewReader(r), pos: sesstype.TokenPos{Char: 0, Lines: []int{}}}
 }
 
 // read reads the next rune from the buffered reader.
@@ -59,7 +61,7 @@ func (s *Scanner) unread() {
 }
 
 // Scan returns the next token and parsed value.
-func (s *Scanner) Scan() (token Token, value string, startPos, endPos TokenPos) {
+func (s *Scanner) Scan() (token Token, value string, startPos, endPos sesstype.TokenPos) {
 	ch := s.read()
 
 	if isWhitespace(ch) {
@@ -119,7 +121,7 @@ func (s *Scanner) Scan() (token Token, value string, startPos, endPos TokenPos) 
 	return ILLEGAL, string(ch), startPos, endPos
 }
 
-func (s *Scanner) scanIdent() (token Token, value string, startPos, endPos TokenPos) {
+func (s *Scanner) scanIdent() (token Token, value string, startPos, endPos sesstype.TokenPos) {
 	var buf bytes.Buffer
 	startPos = s.pos
 	defer func() { endPos = s.pos }()

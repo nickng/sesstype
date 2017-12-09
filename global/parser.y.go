@@ -1,26 +1,28 @@
-//line sesstype.y:2
-package sesstype
+//line global.y:2
+package global
 
 import __yyfmt__ "fmt"
 
-//line sesstype.y:2
+//line global.y:2
 import (
 	"io"
+
+	"go.nickng.io/sesstype"
 )
 
-var global Global // Temporary holder for parsed Global
+var global Type // Temporary holder for parsed Global
 
-//line sesstype.y:11
+//line global.y:13
 type sesstypeSymType struct {
 	yys       int
 	strval    string
-	msg       Message
-	role      Role
-	global    Global
-	branch    map[Message]Global
+	msg       sesstype.Message
+	role      sesstype.Role
+	global    Type
+	branch    map[sesstype.Message]Type
 	sendrecvs []struct {
-		m Message
-		g Global
+		m sesstype.Message
+		g Type
 	}
 }
 
@@ -68,10 +70,12 @@ const sesstypeEofCode = 1
 const sesstypeErrCode = 2
 const sesstypeInitialStackSize = 16
 
-//line sesstype.y:67
+//line global.y:69
 
-// Parse is the entry point to the global type parser.
-func Parse(r io.Reader) (Global, error) {
+// Parse is the entry point to the Global Type parser.
+// To parse Local Type, use the Parse function of the
+// local subpackage (i.e. local.Parse).
+func Parse(r io.Reader) (Type, error) {
 	l := NewLexer(r)
 	sesstypeParse(l)
 	select {
@@ -491,121 +495,121 @@ sesstypedefault:
 
 	case 1:
 		sesstypeDollar = sesstypeS[sesstypept-1 : sesstypept+1]
-		//line sesstype.y:30
+		//line global.y:32
 		{
 			global = sesstypeDollar[1].global
 		}
 	case 2:
 		sesstypeDollar = sesstypeS[sesstypept-1 : sesstypept+1]
-		//line sesstype.y:33
+		//line global.y:35
 		{
-			sesstypeVAL.role = NewRole(sesstypeDollar[1].strval)
+			sesstypeVAL.role = sesstype.NewRole(sesstypeDollar[1].strval)
 		}
 	case 3:
 		sesstypeDollar = sesstypeS[sesstypept-2 : sesstypept+1]
-		//line sesstype.y:36
+		//line global.y:38
 		{
-			sesstypeVAL.msg = Message{Label: sesstypeDollar[1].strval}
+			sesstypeVAL.msg = sesstype.Message{Label: sesstypeDollar[1].strval}
 		}
 	case 4:
 		sesstypeDollar = sesstypeS[sesstypept-1 : sesstypept+1]
-		//line sesstype.y:37
+		//line global.y:39
 		{
-			sesstypeVAL.msg = Message{Label: ""}
+			sesstypeVAL.msg = sesstype.Message{Label: ""}
 		}
 	case 5:
 		sesstypeDollar = sesstypeS[sesstypept-4 : sesstypept+1]
-		//line sesstype.y:38
+		//line global.y:40
 		{
-			sesstypeVAL.msg = Message{Label: sesstypeDollar[1].strval, Payload: sesstypeDollar[3].strval}
+			sesstypeVAL.msg = sesstype.Message{Label: sesstypeDollar[1].strval, Payload: sesstypeDollar[3].strval}
 		}
 	case 6:
 		sesstypeDollar = sesstypeS[sesstypept-5 : sesstypept+1]
-		//line sesstype.y:41
+		//line global.y:43
 		{
 			sesstypeVAL.global = NewInteract(sesstypeDollar[1].role, sesstypeDollar[3].role, sesstypeDollar[5].branch)
 		}
 	case 7:
 		sesstypeDollar = sesstypeS[sesstypept-1 : sesstypept+1]
-		//line sesstype.y:42
+		//line global.y:44
 		{
 			sesstypeVAL.global = sesstypeDollar[1].global
 		}
 	case 8:
 		sesstypeDollar = sesstypeS[sesstypept-1 : sesstypept+1]
-		//line sesstype.y:43
+		//line global.y:45
 		{
 			sesstypeVAL.global = sesstypeDollar[1].global
 		}
 	case 9:
 		sesstypeDollar = sesstypeS[sesstypept-1 : sesstypept+1]
-		//line sesstype.y:44
+		//line global.y:46
 		{
 			sesstypeVAL.global = sesstypeDollar[1].global
 		}
 	case 10:
 		sesstypeDollar = sesstypeS[sesstypept-3 : sesstypept+1]
-		//line sesstype.y:47
+		//line global.y:49
 		{
-			sesstypeVAL.branch = make(map[Message]Global)
+			sesstypeVAL.branch = make(map[sesstype.Message]Type)
 			for _, sr := range sesstypeDollar[2].sendrecvs {
 				sesstypeVAL.branch[sr.m] = sr.g
 			}
 		}
 	case 11:
 		sesstypeDollar = sesstypeS[sesstypept-1 : sesstypept+1]
-		//line sesstype.y:48
+		//line global.y:50
 		{
-			sesstypeVAL.branch = make(map[Message]Global)
+			sesstypeVAL.branch = make(map[sesstype.Message]Type)
 			for _, sr := range sesstypeDollar[1].sendrecvs {
 				sesstypeVAL.branch[sr.m] = sr.g
 			}
 		}
 	case 12:
 		sesstypeDollar = sesstypeS[sesstypept-3 : sesstypept+1]
-		//line sesstype.y:51
+		//line global.y:53
 		{
 			sesstypeVAL.sendrecvs = []struct {
-				m Message
-				g Global
+				m sesstype.Message
+				g Type
 			}{struct {
-				m Message
-				g Global
+				m sesstype.Message
+				g Type
 			}{sesstypeDollar[1].msg, sesstypeDollar[3].global}}
 		}
 	case 13:
 		sesstypeDollar = sesstypeS[sesstypept-3 : sesstypept+1]
-		//line sesstype.y:54
+		//line global.y:56
 		{
 			sesstypeVAL.sendrecvs = append(sesstypeDollar[1].sendrecvs, sesstypeDollar[3].sendrecvs...)
 		}
 	case 14:
 		sesstypeDollar = sesstypeS[sesstypept-1 : sesstypept+1]
-		//line sesstype.y:55
+		//line global.y:57
 		{
 			sesstypeVAL.sendrecvs = []struct {
-				m Message
-				g Global
+				m sesstype.Message
+				g Type
 			}{struct {
-				m Message
-				g Global
+				m sesstype.Message
+				g Type
 			}{m: sesstypeDollar[1].sendrecvs[0].m, g: sesstypeDollar[1].sendrecvs[0].g}}
 		}
 	case 15:
 		sesstypeDollar = sesstypeS[sesstypept-4 : sesstypept+1]
-		//line sesstype.y:58
+		//line global.y:60
 		{
 			sesstypeVAL.global = NewRecur(sesstypeDollar[2].strval, sesstypeDollar[4].global)
 		}
 	case 16:
 		sesstypeDollar = sesstypeS[sesstypept-1 : sesstypept+1]
-		//line sesstype.y:61
+		//line global.y:63
 		{
 			sesstypeVAL.global = NewTypeVar(sesstypeDollar[1].strval)
 		}
 	case 17:
 		sesstypeDollar = sesstypeS[sesstypept-1 : sesstypept+1]
-		//line sesstype.y:64
+		//line global.y:66
 		{
 			sesstypeVAL.global = NewEnd()
 		}

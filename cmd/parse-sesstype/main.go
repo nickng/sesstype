@@ -10,6 +10,7 @@ import (
 	"os"
 
 	"go.nickng.io/sesstype"
+	"go.nickng.io/sesstype/global"
 	"go.nickng.io/sesstype/local"
 )
 
@@ -69,7 +70,7 @@ func main() {
 	} else {
 		var buf bytes.Buffer
 		tee := io.TeeReader(reader, &buf)
-		g, err := sesstype.Parse(tee)
+		g, err := global.Parse(tee)
 		if err != nil {
 			if err, ok := err.(*sesstype.ErrParse); ok {
 				diag := err.Pos.CaretDiag(buf.Bytes())

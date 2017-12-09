@@ -19,30 +19,58 @@
 // The basic syntax of the sesstype language is as follows, G and L denote
 // Global Types and Local Types respectively:
 //
-//    P,Q ::= alphanum               Role names
-//    l   ::= alphanum               Message label
-//    U   ::= alphanum               Payload type
-//    T   ::= alphanum               Type variable label
+//     P,Q ::= alphanum               Role names
+//     l   ::= alphanum               Message label
+//     U   ::= alphanum               Payload type
+//     T   ::= alphanum               Type variable label
 //
-//    G   ::= P->Q: { l(U).G , ... } Interaction between P and Q with message l(U)
-//          | *T.G                   Recursion with label T, body G
-//          | T                      Type variable
-//          | end                    End type
+//     G   ::= P->Q: { l(U).G , ... } Interaction between P and Q with message l(U)
+//           | *T.G                   Recursion with label T, body G
+//           | T                      Type variable
+//           | end                    End type
 //
-//    L   ::= Q &{ ?l(U).L, ... }    Branching, receive l(U) from role Q
-//          | P +{ !l(U).L, ... }    Selection, send l(U) to role P
-//          | *T.L                   Recursion with label T, body L
-//          | T                      Type variable
-//          | end                    End type
+//     L   ::= Q &{ ?l(U).L, ... }    Branching, receive l(U) from role Q
+//           | P +{ !l(U).L, ... }    Selection, send l(U) to role P
+//           | *T.L                   Recursion with label T, body L
+//           | T                      Type variable
+//           | end                    End type
 //
-// As a syntactic sugar, branching and receiving with only a single branch, i.e.
+// As a syntactic sugar, interaction, branching and receiving
+// with only a single branch, i.e.
 //
+//     P->Q: { l(U).G }
 //     Q &{ ?l(U).L }
 //     P +{ !l(U).L }
 //
-// can be written without the braces to denote receiving and sending:
+// can be written without the braces to denote message passing,
+// receiving and sending:
 //
+//     P->Q: l(U).L
 //     Q ?l(U).L
 //     P !l(U).L
+//
+// The global and local subpackage contains the parser and data structure for
+// Global Types and Local Types respectively. To invoke the parsers:
+//
+//     import (
+//     	"log"
+//
+//     	"go.nickng.io/sesstype/global"
+//     	"go.nickng.io/sesstype/local"
+//     )
+//
+//     ...
+//
+//     g, err := global.Parse("A->B: l().end")
+//     if err != nil {
+//     	log.Fatal(err)
+//     }
+//     log.Println(g.String()) // Parsed global type
+//
+//     l, err := local.Parse("A?l(U).end")
+//     if err != nil {
+//     	log.Fatal(err)
+//     }
+//     log.Println(l.String()) // Parsed local type
 //
 package sesstype // import "go.nickng.io/sesstype"

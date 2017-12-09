@@ -12,24 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package local provides a parser for the sesstype mini language (local types).
+//
+// This subpackage provide the parser for the Local Types syntax of the
+// sesstype language. For detailed syntax of the complete language, see
+// documentation of parent package.
+//
 package local
-
-// Tokens for use with lexer and parser.
-
-// Token is a lexical token.
-type Token int
-
-const (
-	// ILLEGAL is a special token for errors.
-	ILLEGAL Token = iota
-)
-
-var eof = rune(0)
-
-func isWhitespace(ch rune) bool {
-	return ch == ' ' || ch == '\t' || ch == '\n'
-}
-
-func isAlphaNum(ch rune) bool {
-	return ('a' <= ch && ch <= 'z') || ('A' <= ch && ch <= 'Z') || ('0' <= ch && ch <= '9')
-}

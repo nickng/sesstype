@@ -12,11 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package sesstype
+package global
 
-//go:generate goyacc -p sesstype -o parser.y.go sesstype.y
+//go:generate goyacc -p sesstype -o parser.y.go global.y
 
-import "io"
+import (
+	"io"
+
+	"go.nickng.io/sesstype"
+)
 
 // Lexer for sesstype.
 type Lexer struct {
@@ -38,5 +42,5 @@ func (l *Lexer) Lex(yylval *sesstypeSymType) int {
 
 // Error handles error.
 func (l *Lexer) Error(err string) {
-	l.Errors <- &ErrParse{Err: err, Pos: l.scanner.pos}
+	l.Errors <- &sesstype.ErrParse{Err: err, Pos: l.scanner.pos}
 }

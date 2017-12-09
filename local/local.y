@@ -7,16 +7,16 @@ import (
 	"go.nickng.io/sesstype"
 )
 
-var local sesstype.Local // Temporary holder for parsed Local
+var local Type // Temporary holder for parsed Local
 %}
 
 %union {
 	strval    string
 	msg       sesstype.Message
 	role      sesstype.Role
-	local     sesstype.Local
-	sendrecvs []struct{m sesstype.Message; l sesstype.Local}
-	branch    map[sesstype.Message]sesstype.Local
+	local     Type
+	sendrecvs []struct{m sesstype.Message; l Type}
+	branch    map[sesstype.Message]Type
 }
 
 %token LPAREN RPAREN LBRACE RBRACE COLON ARROW DOT COMMA MU UNIT END EXCLAIMMARK QUESTIONMARK AMPERSAND OPLUS
@@ -40,48 +40,48 @@ message : IDENT UNIT                { $$ = sesstype.Message{Label: $1}          
         | IDENT LPAREN IDENT RPAREN { $$ = sesstype.Message{Label: $1, Payload: $3} }
         ;
 
-local : role branches { $$ = sesstype.NewBranch($1, $2) }
-      | role selects  { $$ = sesstype.NewSelect($1, $2) }
+local : role branches { $$ = NewBranch($1, $2) }
+      | role selects  { $$ = NewSelect($1, $2) }
       | lrecur               { $$ = $1 }
       | ltypevar             { $$ = $1 }
       | lend                 { $$ = $1 }
       ;
 
-branches : AMPERSAND LBRACE recvs RBRACE  { $$ = make(map[sesstype.Message]sesstype.Local); for _, l := range $3 { $$[l.m] = l.l } }
-         |                  recv          { $$ = make(map[sesstype.Message]sesstype.Local); for _, l := range $1 { $$[l.m] = l.l } }
+branches : AMPERSAND LBRACE recvs RBRACE  { $$ = make(map[sesstype.Message]Type); for _, l := range $3 { $$[l.m] = l.l } }
+         |                  recv          { $$ = make(map[sesstype.Message]Type); for _, l := range $1 { $$[l.m] = l.l } }
          ;
 
-recv : QUESTIONMARK message DOT local { $$ = []struct{m sesstype.Message; l sesstype.Local}{ struct{m sesstype.Message; l sesstype.Local}{$2, $4} } }
+recv : QUESTIONMARK message DOT local { $$ = []struct{m sesstype.Message; l Type}{ struct{m sesstype.Message; l Type}{$2, $4} } }
      ;
 
 recvs : recvs COMMA recv { $$ = append($1, $3...) }
-      |             recv { $$ = []struct{m sesstype.Message; l sesstype.Local}{ struct{m sesstype.Message; l sesstype.Local}{m: $1[0].m, l: $1[0].l} } }
+      |             recv { $$ = []struct{m sesstype.Message; l Type}{ struct{m sesstype.Message; l Type}{m: $1[0].m, l: $1[0].l} } }
       ;
 
-selects : OPLUS LBRACE sends RBRACE { $$ = make(map[sesstype.Message]sesstype.Local); for _, s := range $3 { $$[s.m] = s.l } }
-        |              send         { $$ = make(map[sesstype.Message]sesstype.Local); for _, s := range $1 { $$[s.m] = s.l } }
+selects : OPLUS LBRACE sends RBRACE { $$ = make(map[sesstype.Message]Type); for _, s := range $3 { $$[s.m] = s.l } }
+        |              send         { $$ = make(map[sesstype.Message]Type); for _, s := range $1 { $$[s.m] = s.l } }
         ;
 
-send : EXCLAIMMARK message DOT local { $$ = []struct{m sesstype.Message; l sesstype.Local}{ struct{m sesstype.Message; l sesstype.Local}{$2, $4} } }
+send : EXCLAIMMARK message DOT local { $$ = []struct{m sesstype.Message; l Type}{ struct{m sesstype.Message; l Type}{$2, $4} } }
      ;
 
 sends : sends COMMA send { $$ = append($1, $3...) }
-      |             send { $$ = []struct{m sesstype.Message; l sesstype.Local}{ struct{m sesstype.Message; l sesstype.Local}{m: $1[0].m, l: $1[0].l} } }
+      |             send { $$ = []struct{m sesstype.Message; l Type}{ struct{m sesstype.Message; l Type}{m: $1[0].m, l: $1[0].l} } }
       ;
 
-lrecur : MU IDENT DOT local { $$ = sesstype.NewLRecur($2, $4) }
+lrecur : MU IDENT DOT local { $$ = NewRecur($2, $4) }
        ;
 
-ltypevar : IDENT { $$ = sesstype.NewLTypeVar($1) }
+ltypevar : IDENT { $$ = NewTypeVar($1) }
          ;
 
-lend : END { $$ = sesstype.NewLEnd() }
+lend : END { $$ = NewEnd() }
      ;
 
 %%
 
 // Parse is the entry point to the local type parser.
-func Parse(r io.Reader) (sesstype.Local, error) {
+func Parse(r io.Reader) (Type, error) {
 	l := NewLexer(r)
 	sesstypeParse(l)
 	select {
