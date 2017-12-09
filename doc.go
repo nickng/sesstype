@@ -12,6 +12,37 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package sesstype provides a simple library for the sesstype mini language.
+// Package sesstype provides a parser and library for the sesstype mini language.
+//
+// Syntax
+//
+// The basic syntax of the sesstype language is as follows, G and L denote
+// Global Types and Local Types respectively:
+//
+//    P,Q ::= alphanum               Role names
+//    l   ::= alphanum               Message label
+//    U   ::= alphanum               Payload type
+//    T   ::= alphanum               Type variable label
+//
+//    G   ::= P->Q: { l(U).G , ... } Interaction between P and Q with message l(U)
+//          | *T.G                   Recursion with label T, body G
+//          | T                      Type variable
+//          | end                    End type
+//
+//    L   ::= Q &{ ?l(U).L, ... }    Branching, receive l(U) from role Q
+//          | P +{ !l(U).L, ... }    Selection, send l(U) to role P
+//          | *T.L                   Recursion with label T, body L
+//          | T                      Type variable
+//          | end                    End type
+//
+// As a syntactic sugar, branching and receiving with only a single branch, i.e.
+//
+//     Q &{ ?l(U).L }
+//     P +{ !l(U).L }
+//
+// can be written without the braces to denote receiving and sending:
+//
+//     Q ?l(U).L
+//     P !l(U).L
 //
 package sesstype // import "go.nickng.io/sesstype"
