@@ -1,3 +1,5 @@
 language: go
+go_import_path: go.nickng.io/sesstype
 script:
     - go test -v ./...
+
