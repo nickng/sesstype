@@ -1,4 +1,5 @@
-# sesstype
+# sesstype [![Build Status](https://travis-ci.org/nickng/sesstype.svg?branch=master)](https://travis-ci.org/nickng/sesstype) [![GoDoc](https://godoc.org/go.nickng.io/sesstype?status.svg)](http://godoc.org/go.nickng.io/sesstype)
+
 
 `sesstype` is a parser and library for the `sesstype` type language.
 
@@ -55,4 +56,4 @@ lend     = "end"
 ```
 ## License
 
-`sesstype`` is licensed under the [Apache License](http://www.apache.org/licenses/LICENSE-2.0).
+`sesstype` is licensed under the [Apache License](http://www.apache.org/licenses/LICENSE-2.0).
