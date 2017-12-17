@@ -8,21 +8,25 @@ import (
 	"io"
 
 	"go.nickng.io/sesstype"
+	"go.nickng.io/sesstype/local"
 )
 
 var global Type // Temporary holder for parsed Global
 
-//line global.y:13
+//line global.y:14
 type sesstypeSymType struct {
-	yys       int
-	strval    string
-	msg       sesstype.Message
-	role      sesstype.Role
-	global    Type
-	branch    map[sesstype.Message]Type
-	sendrecvs []struct {
+	yys        int
+	strval     string
+	msg        sesstype.Message
+	role       sesstype.Role
+	gtype      Type
+	branch     map[sesstype.Message]Type
+	sendrecvs  []parseSendRecvs
+	ltype      local.Type
+	lbranch    map[sesstype.Message]local.Type
+	lsendrecvs []struct {
 		m sesstype.Message
-		g Type
+		l local.Type
 	}
 }
 
@@ -42,6 +46,7 @@ const QUESTIONMARK = 57358
 const AMPERSAND = 57359
 const OPLUS = 57360
 const IDENT = 57361
+const TYPEVAR = 57362
 
 var sesstypeToknames = [...]string{
 	"$end",
@@ -63,6 +68,7 @@ var sesstypeToknames = [...]string{
 	"AMPERSAND",
 	"OPLUS",
 	"IDENT",
+	"TYPEVAR",
 }
 var sesstypeStatenames = [...]string{}
 
@@ -70,7 +76,7 @@ const sesstypeEofCode = 1
 const sesstypeErrCode = 2
 const sesstypeInitialStackSize = 16
 
-//line global.y:69
+//line global.y:115
 
 // Parse is the entry point to the Global Type parser.
 // To parse Local Type, use the Parse function of the
@@ -91,57 +97,76 @@ var sesstypeExca = [...]int{
 	-1, 1,
 	1, -1,
 	-2, 0,
-	-1, 7,
-	9, 2,
-	-2, 16,
 }
 
 const sesstypePrivate = 57344
 
-const sesstypeLast = 35
+const sesstypeLast = 82
 
 var sesstypeAct = [...]int{
 
-	19, 2, 8, 31, 9, 18, 13, 22, 11, 7,
-	28, 27, 22, 21, 29, 3, 16, 10, 21, 24,
-	26, 25, 14, 15, 33, 1, 12, 30, 17, 23,
-	32, 6, 5, 4, 20,
+	48, 32, 20, 46, 19, 33, 3, 2, 37, 51,
+	39, 37, 7, 39, 12, 7, 38, 13, 31, 38,
+	3, 49, 16, 24, 50, 49, 45, 47, 8, 50,
+	10, 3, 18, 30, 40, 7, 9, 22, 27, 22,
+	66, 62, 64, 21, 67, 21, 65, 26, 61, 56,
+	25, 28, 54, 55, 60, 29, 58, 14, 63, 11,
+	15, 53, 52, 68, 69, 42, 41, 1, 71, 70,
+	57, 59, 43, 44, 36, 35, 34, 17, 23, 6,
+	5, 4,
 }
 var sesstypePact = [...]int{
 
-	-10, -1000, -1000, 8, -1000, -1000, -1000, -1000, -11, -1000,
-	-13, 12, 15, -1000, -10, -1, -1000, -1000, -6, -1000,
-	11, 7, -1000, 3, -1000, -10, -1000, -16, -1000, -6,
-	-1000, 19, -1000, -1000,
+	16, -1000, -1000, 50, -1000, -1000, -1000, -1000, -5, -1000,
+	-1000, -7, 47, 52, 16, 26, -1000, -1000, 24, -1000,
+	40, 34, -1000, 44, -1000, 16, -1000, -1, -1000, 24,
+	-1000, 61, 60, 9, -1000, -1000, -1000, -10, -1000, -1000,
+	-1000, -1000, -1000, -1000, -1000, 56, -1000, 55, -1000, 24,
+	24, 39, 5, 14, 38, 31, -4, 35, -1000, 33,
+	-1000, -4, -4, -1000, -1000, 5, -1000, 14, -1000, -1000,
+	-1000, -1000,
 }
 var sesstypePgo = [...]int{
 
-	0, 34, 15, 1, 33, 32, 31, 0, 29, 28,
-	25,
+	0, 2, 5, 7, 81, 80, 79, 4, 78, 77,
+	1, 76, 75, 74, 73, 72, 0, 71, 3, 70,
+	67,
 }
 var sesstypeR1 = [...]int{
 
-	0, 10, 2, 1, 1, 1, 3, 3, 3, 3,
-	9, 9, 7, 8, 8, 4, 5, 6,
+	0, 20, 2, 1, 1, 1, 1, 3, 3, 3,
+	3, 9, 9, 7, 8, 8, 4, 5, 6, 10,
+	10, 10, 10, 10, 15, 15, 18, 19, 19, 14,
+	14, 16, 17, 17, 11, 12, 13,
 }
 var sesstypeR2 = [...]int{
 
-	0, 1, 1, 2, 1, 4, 5, 1, 1, 1,
-	3, 1, 3, 3, 1, 4, 1, 1,
+	0, 1, 1, 2, 1, 4, 4, 5, 1, 1,
+	1, 3, 1, 3, 3, 1, 4, 1, 1, 2,
+	2, 1, 1, 1, 4, 1, 4, 3, 1, 4,
+	1, 4, 3, 1, 4, 1, 1,
 }
 var sesstypeChk = [...]int{
 
-	-1000, -10, -3, -2, -4, -5, -6, 19, 12, 14,
-	9, 19, -2, 19, 10, 8, -3, -9, 6, -7,
+	-1000, -20, -3, -2, -4, -5, -6, 19, 12, 20,
+	14, 9, 19, -2, 10, 8, -3, -9, 6, -7,
 	-1, 19, 13, -8, -7, 10, 13, 4, 7, 11,
-	-3, 19, -7, 5,
+	-3, 19, -10, -2, -11, -12, -13, 12, 20, 14,
+	-7, 5, 5, -15, -14, 17, -18, 18, -16, 16,
+	15, 19, 6, 6, -1, -1, 10, -19, -18, -17,
+	-16, 10, 10, -10, 7, 11, 7, 11, -10, -10,
+	-18, -16,
 }
 var sesstypeDef = [...]int{
 
-	0, -2, 1, 0, 7, 8, 9, -2, 0, 17,
-	0, 0, 0, 2, 0, 0, 15, 6, 0, 11,
-	0, 0, 4, 0, 14, 0, 3, 0, 10, 0,
-	12, 0, 13, 5,
+	0, -2, 1, 0, 8, 9, 10, 2, 0, 17,
+	18, 0, 0, 0, 0, 0, 16, 7, 0, 12,
+	0, 0, 4, 0, 15, 0, 3, 0, 11, 0,
+	13, 2, 0, 0, 21, 22, 23, 0, 35, 36,
+	14, 5, 6, 19, 20, 0, 25, 0, 30, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 28, 0,
+	33, 0, 0, 34, 24, 0, 29, 0, 26, 31,
+	27, 32,
 }
 var sesstypeTok1 = [...]int{
 
@@ -150,7 +175,7 @@ var sesstypeTok1 = [...]int{
 var sesstypeTok2 = [...]int{
 
 	2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
-	12, 13, 14, 15, 16, 17, 18, 19,
+	12, 13, 14, 15, 16, 17, 18, 19, 20,
 }
 var sesstypeTok3 = [...]int{
 	0,
@@ -495,123 +520,261 @@ sesstypedefault:
 
 	case 1:
 		sesstypeDollar = sesstypeS[sesstypept-1 : sesstypept+1]
-		//line global.y:32
+		//line global.y:39
 		{
-			global = sesstypeDollar[1].global
+			global = sesstypeDollar[1].gtype
 		}
 	case 2:
 		sesstypeDollar = sesstypeS[sesstypept-1 : sesstypept+1]
-		//line global.y:35
+		//line global.y:42
 		{
 			sesstypeVAL.role = sesstype.NewRole(sesstypeDollar[1].strval)
 		}
 	case 3:
 		sesstypeDollar = sesstypeS[sesstypept-2 : sesstypept+1]
-		//line global.y:38
+		//line global.y:45
 		{
 			sesstypeVAL.msg = sesstype.Message{Label: sesstypeDollar[1].strval}
 		}
 	case 4:
 		sesstypeDollar = sesstypeS[sesstypept-1 : sesstypept+1]
-		//line global.y:39
+		//line global.y:46
 		{
 			sesstypeVAL.msg = sesstype.Message{Label: ""}
 		}
 	case 5:
 		sesstypeDollar = sesstypeS[sesstypept-4 : sesstypept+1]
-		//line global.y:40
+		//line global.y:47
 		{
-			sesstypeVAL.msg = sesstype.Message{Label: sesstypeDollar[1].strval, Payload: sesstypeDollar[3].strval}
+			sesstypeVAL.msg = sesstype.Message{Label: sesstypeDollar[1].strval, Payload: sesstype.BaseType{sesstypeDollar[3].strval}}
 		}
 	case 6:
-		sesstypeDollar = sesstypeS[sesstypept-5 : sesstypept+1]
-		//line global.y:43
+		sesstypeDollar = sesstypeS[sesstypept-4 : sesstypept+1]
+		//line global.y:48
 		{
-			sesstypeVAL.global = NewInteract(sesstypeDollar[1].role, sesstypeDollar[3].role, sesstypeDollar[5].branch)
+			sesstypeVAL.msg = sesstype.Message{Label: sesstypeDollar[1].strval, Payload: sesstypeDollar[3].ltype}
 		}
 	case 7:
-		sesstypeDollar = sesstypeS[sesstypept-1 : sesstypept+1]
-		//line global.y:44
+		sesstypeDollar = sesstypeS[sesstypept-5 : sesstypept+1]
+		//line global.y:51
 		{
-			sesstypeVAL.global = sesstypeDollar[1].global
+			sesstypeVAL.gtype = NewInteract(sesstypeDollar[1].role, sesstypeDollar[3].role, sesstypeDollar[5].branch)
 		}
 	case 8:
 		sesstypeDollar = sesstypeS[sesstypept-1 : sesstypept+1]
-		//line global.y:45
+		//line global.y:52
 		{
-			sesstypeVAL.global = sesstypeDollar[1].global
+			sesstypeVAL.gtype = sesstypeDollar[1].gtype
 		}
 	case 9:
 		sesstypeDollar = sesstypeS[sesstypept-1 : sesstypept+1]
-		//line global.y:46
+		//line global.y:53
 		{
-			sesstypeVAL.global = sesstypeDollar[1].global
+			sesstypeVAL.gtype = sesstypeDollar[1].gtype
 		}
 	case 10:
+		sesstypeDollar = sesstypeS[sesstypept-1 : sesstypept+1]
+		//line global.y:54
+		{
+			sesstypeVAL.gtype = sesstypeDollar[1].gtype
+		}
+	case 11:
 		sesstypeDollar = sesstypeS[sesstypept-3 : sesstypept+1]
-		//line global.y:49
+		//line global.y:57
 		{
 			sesstypeVAL.branch = make(map[sesstype.Message]Type)
 			for _, sr := range sesstypeDollar[2].sendrecvs {
 				sesstypeVAL.branch[sr.m] = sr.g
 			}
 		}
-	case 11:
+	case 12:
 		sesstypeDollar = sesstypeS[sesstypept-1 : sesstypept+1]
-		//line global.y:50
+		//line global.y:58
 		{
 			sesstypeVAL.branch = make(map[sesstype.Message]Type)
 			for _, sr := range sesstypeDollar[1].sendrecvs {
 				sesstypeVAL.branch[sr.m] = sr.g
 			}
 		}
-	case 12:
-		sesstypeDollar = sesstypeS[sesstypept-3 : sesstypept+1]
-		//line global.y:53
-		{
-			sesstypeVAL.sendrecvs = []struct {
-				m sesstype.Message
-				g Type
-			}{struct {
-				m sesstype.Message
-				g Type
-			}{sesstypeDollar[1].msg, sesstypeDollar[3].global}}
-		}
 	case 13:
 		sesstypeDollar = sesstypeS[sesstypept-3 : sesstypept+1]
-		//line global.y:56
+		//line global.y:61
+		{
+			sesstypeVAL.sendrecvs = []parseSendRecvs{parseSendRecvs{sesstypeDollar[1].msg, sesstypeDollar[3].gtype}}
+		}
+	case 14:
+		sesstypeDollar = sesstypeS[sesstypept-3 : sesstypept+1]
+		//line global.y:64
 		{
 			sesstypeVAL.sendrecvs = append(sesstypeDollar[1].sendrecvs, sesstypeDollar[3].sendrecvs...)
 		}
-	case 14:
-		sesstypeDollar = sesstypeS[sesstypept-1 : sesstypept+1]
-		//line global.y:57
-		{
-			sesstypeVAL.sendrecvs = []struct {
-				m sesstype.Message
-				g Type
-			}{struct {
-				m sesstype.Message
-				g Type
-			}{m: sesstypeDollar[1].sendrecvs[0].m, g: sesstypeDollar[1].sendrecvs[0].g}}
-		}
 	case 15:
-		sesstypeDollar = sesstypeS[sesstypept-4 : sesstypept+1]
-		//line global.y:60
+		sesstypeDollar = sesstypeS[sesstypept-1 : sesstypept+1]
+		//line global.y:65
 		{
-			sesstypeVAL.global = NewRecur(sesstypeDollar[2].strval, sesstypeDollar[4].global)
+			sesstypeVAL.sendrecvs = []parseSendRecvs{parseSendRecvs{m: sesstypeDollar[1].sendrecvs[0].m, g: sesstypeDollar[1].sendrecvs[0].g}}
 		}
 	case 16:
-		sesstypeDollar = sesstypeS[sesstypept-1 : sesstypept+1]
-		//line global.y:63
+		sesstypeDollar = sesstypeS[sesstypept-4 : sesstypept+1]
+		//line global.y:68
 		{
-			sesstypeVAL.global = NewTypeVar(sesstypeDollar[1].strval)
+			sesstypeVAL.gtype = NewRecur(sesstypeDollar[2].strval, sesstypeDollar[4].gtype)
 		}
 	case 17:
 		sesstypeDollar = sesstypeS[sesstypept-1 : sesstypept+1]
-		//line global.y:66
+		//line global.y:71
 		{
-			sesstypeVAL.global = NewEnd()
+			sesstypeVAL.gtype = NewTypeVar(sesstypeDollar[1].strval)
+		}
+	case 18:
+		sesstypeDollar = sesstypeS[sesstypept-1 : sesstypept+1]
+		//line global.y:74
+		{
+			sesstypeVAL.gtype = NewEnd()
+		}
+	case 19:
+		sesstypeDollar = sesstypeS[sesstypept-2 : sesstypept+1]
+		//line global.y:77
+		{
+			sesstypeVAL.ltype = local.NewBranch(sesstypeDollar[1].role, sesstypeDollar[2].lbranch)
+		}
+	case 20:
+		sesstypeDollar = sesstypeS[sesstypept-2 : sesstypept+1]
+		//line global.y:78
+		{
+			sesstypeVAL.ltype = local.NewSelect(sesstypeDollar[1].role, sesstypeDollar[2].lbranch)
+		}
+	case 21:
+		sesstypeDollar = sesstypeS[sesstypept-1 : sesstypept+1]
+		//line global.y:79
+		{
+			sesstypeVAL.ltype = sesstypeDollar[1].ltype
+		}
+	case 22:
+		sesstypeDollar = sesstypeS[sesstypept-1 : sesstypept+1]
+		//line global.y:80
+		{
+			sesstypeVAL.ltype = sesstypeDollar[1].ltype
+		}
+	case 23:
+		sesstypeDollar = sesstypeS[sesstypept-1 : sesstypept+1]
+		//line global.y:81
+		{
+			sesstypeVAL.ltype = sesstypeDollar[1].ltype
+		}
+	case 24:
+		sesstypeDollar = sesstypeS[sesstypept-4 : sesstypept+1]
+		//line global.y:84
+		{
+			sesstypeVAL.lbranch = make(map[sesstype.Message]local.Type)
+			for _, l := range sesstypeDollar[3].lsendrecvs {
+				sesstypeVAL.lbranch[l.m] = l.l
+			}
+		}
+	case 25:
+		sesstypeDollar = sesstypeS[sesstypept-1 : sesstypept+1]
+		//line global.y:85
+		{
+			sesstypeVAL.lbranch = make(map[sesstype.Message]local.Type)
+			for _, l := range sesstypeDollar[1].lsendrecvs {
+				sesstypeVAL.lbranch[l.m] = l.l
+			}
+		}
+	case 26:
+		sesstypeDollar = sesstypeS[sesstypept-4 : sesstypept+1]
+		//line global.y:88
+		{
+			sesstypeVAL.lsendrecvs = []struct {
+				m sesstype.Message
+				l local.Type
+			}{struct {
+				m sesstype.Message
+				l local.Type
+			}{sesstypeDollar[2].msg, sesstypeDollar[4].ltype}}
+		}
+	case 27:
+		sesstypeDollar = sesstypeS[sesstypept-3 : sesstypept+1]
+		//line global.y:91
+		{
+			sesstypeVAL.lsendrecvs = append(sesstypeDollar[1].lsendrecvs, sesstypeDollar[3].lsendrecvs...)
+		}
+	case 28:
+		sesstypeDollar = sesstypeS[sesstypept-1 : sesstypept+1]
+		//line global.y:92
+		{
+			sesstypeVAL.lsendrecvs = []struct {
+				m sesstype.Message
+				l local.Type
+			}{struct {
+				m sesstype.Message
+				l local.Type
+			}{m: sesstypeDollar[1].lsendrecvs[0].m, l: sesstypeDollar[1].lsendrecvs[0].l}}
+		}
+	case 29:
+		sesstypeDollar = sesstypeS[sesstypept-4 : sesstypept+1]
+		//line global.y:95
+		{
+			sesstypeVAL.lbranch = make(map[sesstype.Message]local.Type)
+			for _, s := range sesstypeDollar[3].lsendrecvs {
+				sesstypeVAL.lbranch[s.m] = s.l
+			}
+		}
+	case 30:
+		sesstypeDollar = sesstypeS[sesstypept-1 : sesstypept+1]
+		//line global.y:96
+		{
+			sesstypeVAL.lbranch = make(map[sesstype.Message]local.Type)
+			for _, s := range sesstypeDollar[1].lsendrecvs {
+				sesstypeVAL.lbranch[s.m] = s.l
+			}
+		}
+	case 31:
+		sesstypeDollar = sesstypeS[sesstypept-4 : sesstypept+1]
+		//line global.y:99
+		{
+			sesstypeVAL.lsendrecvs = []struct {
+				m sesstype.Message
+				l local.Type
+			}{struct {
+				m sesstype.Message
+				l local.Type
+			}{sesstypeDollar[2].msg, sesstypeDollar[4].ltype}}
+		}
+	case 32:
+		sesstypeDollar = sesstypeS[sesstypept-3 : sesstypept+1]
+		//line global.y:102
+		{
+			sesstypeVAL.lsendrecvs = append(sesstypeDollar[1].lsendrecvs, sesstypeDollar[3].lsendrecvs...)
+		}
+	case 33:
+		sesstypeDollar = sesstypeS[sesstypept-1 : sesstypept+1]
+		//line global.y:103
+		{
+			sesstypeVAL.lsendrecvs = []struct {
+				m sesstype.Message
+				l local.Type
+			}{struct {
+				m sesstype.Message
+				l local.Type
+			}{m: sesstypeDollar[1].lsendrecvs[0].m, l: sesstypeDollar[1].lsendrecvs[0].l}}
+		}
+	case 34:
+		sesstypeDollar = sesstypeS[sesstypept-4 : sesstypept+1]
+		//line global.y:106
+		{
+			sesstypeVAL.ltype = local.NewRecur(sesstypeDollar[2].strval, sesstypeDollar[4].ltype)
+		}
+	case 35:
+		sesstypeDollar = sesstypeS[sesstypept-1 : sesstypept+1]
+		//line global.y:109
+		{
+			sesstypeVAL.ltype = local.NewTypeVar(sesstypeDollar[1].strval)
+		}
+	case 36:
+		sesstypeDollar = sesstypeS[sesstypept-1 : sesstypept+1]
+		//line global.y:112
+		{
+			sesstypeVAL.ltype = local.NewEnd()
 		}
 	}
 	goto sesstypestack /* stack new state and value */

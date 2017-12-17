@@ -35,10 +35,25 @@ func NewRole(name string) Role {
 
 // Message represents a message passed between Roles in a session interaction.
 type Message struct {
-	Label   string // Message label
-	Payload string // Freeform string
+	Label   string  // Message label
+	Payload Payload // Freeform string
 }
 
 func (m Message) String() string {
-	return fmt.Sprintf("%s(%s)", m.Label, m.Payload)
+	if m.Payload == nil {
+		return fmt.Sprintf("%s()", m.Label)
+	}
+	return fmt.Sprintf("%s(%s)", m.Label, m.Payload.String())
+}
+
+type Payload interface {
+	String() string
+}
+
+type BaseType struct {
+	Type string
+}
+
+func (t BaseType) String() string {
+	return t.Type
 }

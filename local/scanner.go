@@ -24,13 +24,27 @@ import (
 
 // Scanner is a lexical scanner.
 type Scanner struct {
-	r   *bufio.Reader
-	pos sesstype.TokenPos
+	r        *bufio.Reader
+	pos      sesstype.TokenPos
+	typevars []struct {
+		parseTypeVar  bool
+		validTypeVars map[string]bool
+	}
 }
 
 // NewScanner returns a new instance of Scanner.
 func NewScanner(r io.Reader) *Scanner {
-	return &Scanner{r: bufio.NewReader(r), pos: sesstype.TokenPos{Char: 0, Lines: []int{}}}
+	return &Scanner{
+		r:   bufio.NewReader(r),
+		pos: sesstype.TokenPos{Char: 0, Lines: []int{}},
+		typevars: []struct {
+			parseTypeVar  bool
+			validTypeVars map[string]bool
+		}{struct {
+			parseTypeVar  bool
+			validTypeVars map[string]bool
+		}{validTypeVars: make(map[string]bool)}},
+	}
 }
 
 // read reads the next rune from the buffered reader.
@@ -81,6 +95,7 @@ func (s *Scanner) Scan() (token Token, value string, startPos, endPos sesstype.T
 	case eof:
 		return 0, "", startPos, endPos
 	case 'μ', '*':
+		s.typevars[len(s.typevars)-1].parseTypeVar = true
 		return MU, "μ", startPos, endPos
 	case ':':
 		return COLON, string(ch), startPos, endPos
@@ -99,6 +114,10 @@ func (s *Scanner) Scan() (token Token, value string, startPos, endPos sesstype.T
 	case '{':
 		return LBRACE, string(ch), startPos, endPos
 	case '}':
+		s.typevars = append(s.typevars, struct {
+			parseTypeVar  bool
+			validTypeVars map[string]bool
+		}{validTypeVars: make(map[string]bool)})
 		return RBRACE, string(ch), startPos, endPos
 	case '(':
 		if ch2 := s.read(); ch2 == ')' {
@@ -107,6 +126,10 @@ func (s *Scanner) Scan() (token Token, value string, startPos, endPos sesstype.T
 		s.unread()
 		return LPAREN, string(ch), startPos, endPos
 	case ')':
+		if len(s.typevars) > 1 {
+			s.typevars = s.typevars[0 : len(s.typevars)-1]
+			return RPAREN, string(ch), startPos, endPos
+		}
 		return RPAREN, string(ch), startPos, endPos
 	case '-':
 		if ch2 := s.read(); ch2 == '>' {
@@ -141,6 +164,13 @@ func (s *Scanner) scanIdent() (token Token, value string, startPos, endPos sesst
 	switch buf.String() {
 	case "end":
 		return END, buf.String(), startPos, endPos
+	}
+	if _, ok := s.typevars[len(s.typevars)-1].validTypeVars[buf.String()]; ok {
+		return TYPEVAR, buf.String(), startPos, endPos
+	}
+	if s.typevars[len(s.typevars)-1].parseTypeVar {
+		s.typevars[len(s.typevars)-1].parseTypeVar = false
+		s.typevars[len(s.typevars)-1].validTypeVars[buf.String()] = true
 	}
 	return IDENT, buf.String(), startPos, endPos
 }

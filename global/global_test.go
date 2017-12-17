@@ -3,6 +3,8 @@ package global
 import (
 	"strings"
 	"testing"
+
+	"go.nickng.io/sesstype"
 )
 
 func TestParseEnd(t *testing.T) {
@@ -36,17 +38,13 @@ func TestParseRecur(t *testing.T) {
 }
 
 func TestParseTypeVar(t *testing.T) {
-	// This is a tricky, "T" should be recognised as TypeVar
-	// but it's possible to mistaken it as Role
-	g, err := Parse(strings.NewReader("T"))
+	// This is a tricky, "T" should be recognised as an invalid TypeVar
+	// but it's possible to mistaken it as Role (which makes type incomplete).
+	_, err := Parse(strings.NewReader("T"))
 	if err != nil {
-		t.Fatal(err)
-	}
-	if g, ok := g.(TypeVar); !ok {
-		t.Errorf("Parse error: expected to get TypeVar but got %T", g)
-	}
-	if want, got := "T", g.(TypeVar).T; want != got {
-		t.Errorf("Parse error: want %s but got %s", want, got)
+		if _, ok := err.(*sesstype.ErrParse); !ok {
+			t.Fatalf("Expecting parse error but got %v", err)
+		}
 	}
 }
 
@@ -60,5 +58,28 @@ func TestParse(t *testing.T) {
 	}
 	if want, want2, got := "μT.A → B: l(int).B → A: { l().end, ().T }", "μT.A → B: l(int).B → A: { ().T, l().end }", g.String(); want != got && want2 != got {
 		t.Errorf("Parse error: want %s but got %s", want, got)
+	}
+}
+
+func TestParseSessionPayload(t *testing.T) {
+	g, err := Parse(strings.NewReader(`
+	*T . *x . A->B: l(C&{ ?l(B!L().end).end, ?l2(y).end }).end
+	`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want, want2, got := "μT.μx.A → B: l(C &{ ?l(B !L().end).end, ?l2(y).end }).end", "μT.μx.A → B: l(C &{ ?l2(y).end, ?l(B !L().end).end }).end", g.String(); want != got && want2 != got {
+		t.Errorf("Parse error: want %s but got %s", want, got)
+	}
+}
+
+func TestParseUnclosedSessionPayload(t *testing.T) {
+	_, err := Parse(strings.NewReader(`
+	*T . *x . A->B: l(C&{ ?l(B!L().T).end, ?l2(end).x }).end
+	`))
+	if err != nil {
+		if _, ok := err.(*sesstype.ErrParse); !ok {
+			t.Fatalf("Expecting parse error but got %v", err)
+		}
 	}
 }

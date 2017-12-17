@@ -3,6 +3,8 @@ package local
 import (
 	"strings"
 	"testing"
+
+	"go.nickng.io/sesstype"
 )
 
 func TestParseEnd(t *testing.T) {
@@ -46,17 +48,13 @@ func TestParseRecur(t *testing.T) {
 }
 
 func TestParseTypeVar(t *testing.T) {
-	// This is a tricky, "T" should be recognised as TypeVar
-	// but it's possible to mistaken it as Role
-	l, err := Parse(strings.NewReader("T"))
+	// This is a tricky, "T" should be recognised as an invalid TypeVar
+	// but it's possible to mistaken it as Role (which makes type incomplete).
+	_, err := Parse(strings.NewReader("T"))
 	if err != nil {
-		t.Fatal(err)
-	}
-	if l, ok := l.(TypeVar); !ok {
-		t.Errorf("Parse error: expected to get LTypeVar but got %T", l)
-	}
-	if want, got := "T", l.(TypeVar).T; want != got {
-		t.Errorf("Parse error: want %s but got %s", want, got)
+		if _, ok := err.(*sesstype.ErrParse); !ok {
+			t.Logf("Expecting parse error but got %v", err)
+		}
 	}
 }
 
